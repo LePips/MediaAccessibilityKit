@@ -2,16 +2,18 @@ import CoreGraphics
 import CoreText
 import MediaAccessibility
 
-extension CaptionStyle {
+public extension CaptionStyle {
     /// The user's current style.
-    public static var current: Self {
+    ///
+    /// For OS 26+, you may want to use `CaptionProfile.active` instead.
+    static var current: Self {
         load(from: .user)
     }
 
     /// The fixed system style used for comparison.
-    public static let systemDefaults = load(from: MACaptionAppearanceDomain.default)
+    static let systemDefaults = load(from: MACaptionAppearanceDomain.default)
 
-    private static func load(from domain: MACaptionAppearanceDomain) -> Self {
+    internal static func load(from domain: MACaptionAppearanceDomain) -> Self {
         let textColor = setting {
             MACaptionAppearanceCopyForegroundColor(domain, $0).takeRetainedValue()
         }

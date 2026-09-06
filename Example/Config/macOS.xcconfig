@@ -1,0 +1,8 @@
+PRODUCT_NAME = CaptionExampleMac
+SDKROOT = macosx
+SUPPORTED_PLATFORMS = macosx
+MACOSX_DEPLOYMENT_TARGET = 26.0
+ENABLE_APP_SANDBOX = YES
+ENABLE_HARDENED_RUNTIME = YES
+INFOPLIST_KEY_LSApplicationCategoryType = public.app-category.developer-tools
+LD_RUNPATH_SEARCH_PATHS = $(inherited) @executable_path/../Frameworks

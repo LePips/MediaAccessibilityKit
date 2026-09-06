@@ -1,61 +1,99 @@
+import Foundation
+import MediaAccessibility
 import SwiftUI
 
-/// Displays text using the current caption appearance.
+/// Displays text with a supplied style, or follows system appearance when `style` is nil.
 public struct CaptionText: View {
-    @Environment(\.isMediaCaptionStyleManaged)
-    private var isStyleManaged
-
     private let content: Text
     private let baseSize: CGFloat
     private let fontStyle: CaptionFontStyle
+    private let style: CaptionStyle?
 
     public init(
         _ content: String,
         baseSize: CGFloat,
-        fontStyle: CaptionFontStyle = .default
+        fontStyle: CaptionFontStyle = .default,
+        style: CaptionStyle? = nil
     ) {
         self.init(
             Text(verbatim: content),
             baseSize: baseSize,
-            fontStyle: fontStyle
+            fontStyle: fontStyle,
+            style: style
         )
     }
 
     public init(
         _ content: Text,
         baseSize: CGFloat,
-        fontStyle: CaptionFontStyle = .default
+        fontStyle: CaptionFontStyle = .default,
+        style: CaptionStyle? = nil
     ) {
         self.content = content
         self.baseSize = baseSize
         self.fontStyle = fontStyle
+        self.style = style
     }
 
     @ViewBuilder
     public var body: some View {
-        if isStyleManaged {
-            styledCaption
+        if let style {
+            CaptionTextBody(
+                content: content,
+                baseSize: baseSize,
+                fontStyle: fontStyle,
+                style: style
+            )
         } else {
-            styledCaption.mediaCaptionStyle()
+            ObservedCaptionText(
+                content: content,
+                baseSize: baseSize,
+                fontStyle: fontStyle
+            )
         }
-    }
-
-    private var styledCaption: some View {
-        CaptionTextBody(
-            content: content,
-            baseSize: baseSize,
-            fontStyle: fontStyle
-        )
     }
 }
 
-private struct CaptionTextBody: View {
-    @Environment(\.mediaCaptionStyle)
-    private var style
+private struct ObservedCaptionText: View {
+    @Environment(\.scenePhase)
+    private var scenePhase
+    @State
+    private var style = CaptionStyle.load(from: .user)
 
     let content: Text
     let baseSize: CGFloat
     let fontStyle: CaptionFontStyle
+
+    var body: some View {
+        CaptionTextBody(
+            content: content,
+            baseSize: baseSize,
+            fontStyle: fontStyle,
+            style: style
+        )
+        .task {
+            let changes = NotificationCenter.default
+                .notifications(named: Notification.Name(kMACaptionAppearanceSettingsChangedNotification as String))
+                .map { _ in () }
+
+            style = CaptionStyle.load(from: .user)
+            for await _ in changes {
+                style = CaptionStyle.load(from: .user)
+            }
+        }
+        .onChange(of: scenePhase) {
+            if scenePhase == .active {
+                style = CaptionStyle.load(from: .user)
+            }
+        }
+    }
+}
+
+private struct CaptionTextBody: View {
+    let content: Text
+    let baseSize: CGFloat
+    let fontStyle: CaptionFontStyle
+    let style: CaptionStyle
 
     var body: some View {
         styledContent
@@ -67,8 +105,8 @@ private struct CaptionTextBody: View {
                     edgeStyle: style.text.edgeStyle.value
                 )
             )
-            .padding(.horizontal, 4)
-            .padding(.vertical, 2)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
             .background(
                 style.window.swiftUIColor(),
                 in: RoundedRectangle(
@@ -114,10 +152,6 @@ private struct CaptionTextRenderer: TextRenderer {
     let backgroundColor: Color
     let edgeStyle: CaptionEdgeStyle
 
-    var displayPadding: EdgeInsets {
-        EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4)
-    }
-
     func draw(layout: Text.Layout, in context: inout GraphicsContext) {
         for line in layout {
             let bounds = line.typographicBounds.rect.insetBy(dx: -2, dy: -1)
@@ -134,9 +168,23 @@ private struct CaptionTextRenderer: TextRenderer {
                 y: -1,
                 in: context
             )
-            drawShadow(layout, color: .black, radius: 0, x: 1, y: 1, in: context)
+            drawShadow(
+                layout,
+                color: .black,
+                radius: 0,
+                x: 1,
+                y: 1,
+                in: context
+            )
         case .depressed:
-            drawShadow(layout, color: .black, radius: 0, x: -1, y: -1, in: context)
+            drawShadow(
+                layout,
+                color: .black,
+                radius: 0,
+                x: -1,
+                y: -1,
+                in: context
+            )
             drawShadow(
                 layout,
                 color: .white.opacity(0.7),
@@ -146,9 +194,21 @@ private struct CaptionTextRenderer: TextRenderer {
                 in: context
             )
         case .uniform:
-            drawShadow(layout, color: .black, radius: 1.5, in: context)
+            drawShadow(
+                layout,
+                color: .black,
+                radius: 1.5,
+                in: context
+            )
         case .dropShadow:
-            drawShadow(layout, color: .black, radius: 1, x: 2, y: 2, in: context)
+            drawShadow(
+                layout,
+                color: .black,
+                radius: 1,
+                x: 2,
+                y: 2,
+                in: context
+            )
         case .unspecified, .none, .unknown:
             break
         }

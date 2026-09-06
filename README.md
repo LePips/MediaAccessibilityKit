@@ -1,6 +1,6 @@
 # MediaAccessibilityKit
 
-Swift and SwiftUI types for [MediaAccessibility](https://developer.apple.com/documentation/mediaaccessibility).
+Swift and SwiftUI types for Apple's [MediaAccessibility](https://developer.apple.com/documentation/mediaaccessibility) caption settings.
 
 ## Usage
 
@@ -10,15 +10,4 @@ Use `CaptionText` to display text with the viewer's current caption font, size, 
 import MediaAccessibilityKit
 
 CaptionText("Welcome", baseSize: 28)
-```
-
-`CaptionText` observes caption-setting changes automatically. For a custom caption view, read a snapshot directly or install it in the SwiftUI environment:
-
-```swift
-let style = CaptionStyle.current
-let color = style.text.swiftUIColor()
-let font = style.text.swiftUIFont(baseSize: 28)
-
-MyCaptionView()
-  .mediaCaptionStyle()
 ```
