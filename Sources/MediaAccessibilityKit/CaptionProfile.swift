@@ -16,6 +16,21 @@ public struct CaptionProfile: Identifiable, Sendable, Hashable {
     }
 }
 
+public extension CaptionProfile {
+    /// All saved profiles on iOS 26, macOS 26, and tvOS 26 or later.
+    ///
+    /// Returns an empty array on earlier systems, allowing profile pickers to
+    /// fall back to the current caption style without an availability check.
+    @MainActor
+    static var availableForCurrentPlatform: [Self] {
+        if #available(iOS 26.0, macOS 26.0, tvOS 26.0, *) {
+            available
+        } else {
+            []
+        }
+    }
+}
+
 @available(iOS 26.0, macOS 26.0, tvOS 26.0, *)
 public extension CaptionProfile {
     /// All saved profiles.
