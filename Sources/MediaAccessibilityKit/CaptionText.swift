@@ -2,7 +2,8 @@ import Foundation
 import MediaAccessibility
 import SwiftUI
 
-/// Displays text with a supplied style, or follows system appearance when `style` is nil.
+/// Displays caption text with the supplied style.
+/// Follows system appearance when `style` is `nil`.
 public struct CaptionText: View {
     private let content: Text
     private let baseSize: CGFloat
@@ -35,7 +36,6 @@ public struct CaptionText: View {
         self.style = style
     }
 
-    @ViewBuilder
     public var body: some View {
         if let style {
             CaptionTextBody(

@@ -3,9 +3,9 @@ import CoreText
 import MediaAccessibility
 
 public extension CaptionStyle {
-    /// The user's current style.
+    /// The user's current caption style.
     ///
-    /// For OS 26+, you may want to use `CaptionProfile.active` instead.
+    /// Use `CaptionProfile.active` to access the selected profile on OS 26 or later.
     static var current: Self {
         load(from: .user)
     }

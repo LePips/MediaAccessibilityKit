@@ -1,7 +1,7 @@
 import Foundation
 import MediaAccessibility
 
-/// A saved system caption style. Use `updates` to follow settings changes.
+/// A saved system caption style.
 public struct CaptionProfile: Identifiable, Sendable, Hashable {
     public let id: String
     public let name: String
@@ -16,12 +16,11 @@ public struct CaptionProfile: Identifiable, Sendable, Hashable {
     }
 }
 
+@MainActor
 public extension CaptionProfile {
     /// All saved profiles on iOS 26, macOS 26, and tvOS 26 or later.
     ///
-    /// Returns an empty array on earlier systems, allowing profile pickers to
-    /// fall back to the current caption style without an availability check.
-    @MainActor
+    /// Returns an empty array on earlier systems.
     static var availableForCurrentPlatform: [Self] {
         if #available(iOS 26.0, macOS 26.0, tvOS 26.0, *) {
             available
@@ -31,16 +30,15 @@ public extension CaptionProfile {
     }
 }
 
+@MainActor
 @available(iOS 26.0, macOS 26.0, tvOS 26.0, *)
 public extension CaptionProfile {
     /// All saved profiles.
-    @MainActor
     static var available: [Self] {
         profileIDs.map(load)
     }
 
     /// Yields saved profiles immediately and whenever caption settings change.
-    @MainActor
     static var updates: AsyncStream<[Self]> {
         let changes = NotificationCenter.default
             .notifications(named: Notification.Name(kMACaptionAppearanceSettingsChangedNotification as String))
@@ -60,8 +58,7 @@ public extension CaptionProfile {
         }
     }
 
-    /// The currently selected system profile, if it is still available.
-    @MainActor
+    /// The selected system profile, or `nil` if unavailable.
     static var active: Self? {
         let id = MACaptionAppearanceCopyActiveProfileID() as String
         guard profileIDs.contains(id) else { return nil }
@@ -70,8 +67,7 @@ public extension CaptionProfile {
 
     /// Selects this profile system-wide.
     ///
-    /// - Throws: `ActivationError.unavailableProfile` if it is not available.
-    @MainActor
+    /// - Throws: `ActivationError.unavailableProfile` if the profile is unavailable.
     func activate() throws(ActivationError) {
         guard Self.profileIDs.contains(id) else {
             throw ActivationError.unavailableProfile
@@ -79,7 +75,6 @@ public extension CaptionProfile {
         MACaptionAppearanceSetActiveProfileID(id as CFString)
     }
 
-    @MainActor
     private static func load(_ id: String) -> Self {
         var style = CaptionStyle.systemDefaults
         MACaptionAppearanceExecuteBlockForProfileID(id as CFString) {
@@ -92,7 +87,6 @@ public extension CaptionProfile {
         )
     }
 
-    @MainActor
     private static var profileIDs: [String] {
         MACaptionAppearanceCopyProfileIDs() as? [String] ?? []
     }

@@ -5,7 +5,7 @@ public enum CaptionSettingBehavior: Sendable, Hashable {
     case overrideContent
     case preferContent
 
-    /// A newer system behavior; resolution keeps the system value.
+    /// An unrecognized behavior that keeps the system value.
     case unknown(rawValue: Int)
 
     package init(_ value: MACaptionAppearanceBehavior) {
