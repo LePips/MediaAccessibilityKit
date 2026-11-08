@@ -102,7 +102,8 @@ private struct CaptionTextBody: View {
             .textRenderer(
                 CaptionTextRenderer(
                     backgroundColor: style.textBackground.swiftUIColor(),
-                    edgeStyle: style.text.edgeStyle.value
+                    edgeStyle: style.text.edgeStyle.value,
+                    edgeWidth: max(1, baseSize * style.text.sizeScale.resolved(contentValue: nil) * 0.08)
                 )
             )
             .padding(.horizontal, 8)
@@ -151,6 +152,7 @@ private struct CaptionTextBody: View {
 private struct CaptionTextRenderer: TextRenderer {
     let backgroundColor: Color
     let edgeStyle: CaptionEdgeStyle
+    let edgeWidth: CGFloat
 
     func draw(layout: Text.Layout, in context: inout GraphicsContext) {
         for line in layout {
@@ -194,12 +196,19 @@ private struct CaptionTextRenderer: TextRenderer {
                 in: context
             )
         case .uniform:
-            drawShadow(
-                layout,
-                color: .black,
-                radius: 1.5,
-                in: context
-            )
+            // A uniform edge is a solid outline, not a blurred shadow. Offset
+            // unblurred silhouettes around the glyphs, then draw the text on top.
+            for step in 0 ..< 16 {
+                let angle = Double(step) * .pi / 8
+                drawShadow(
+                    layout,
+                    color: .black,
+                    radius: 0,
+                    x: cos(angle) * edgeWidth,
+                    y: sin(angle) * edgeWidth,
+                    in: context
+                )
+            }
         case .dropShadow:
             drawShadow(
                 layout,
